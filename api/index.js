@@ -4,20 +4,11 @@ import connectDB from "../src/config/db.js";
 
 const app = express();
 
-app.use(express.json());
+// Connect sekali saat serverless function diinisialisasi
+await connectDB();
 
 app.get("/", (req, res) => {
     res.send("🚀 API berjalan di Vercel!");
-});
-
-// Hubungkan ke DB hanya sekali
-let connected = false;
-app.use(async (req, res, next) => {
-    if (!connected) {
-        await connectDB();
-        connected = true;
-    }
-    next();
 });
 
 export default serverless(app);
