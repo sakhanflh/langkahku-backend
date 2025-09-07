@@ -50,7 +50,7 @@ export const tambahData = async (req, res) => {
 // READ
 export const getData = async (req, res) => {
     try {
-        const data = await Tracker.find().sort({ tanggal: -1 }); // terbaru dulu
+        const data = await Tracker.find({ user: req.user.id }).sort({ tanggal: -1 });
         res.json(data);
     } catch (error) {
         res.status(500).json({ message: "Gagal mengambil data tracker", error: error.message });
@@ -98,7 +98,7 @@ export const updateData = async (req, res) => {
 // DELETE
 export const hapusData = async (req, res) => {
     try {
-        const data = await Tracker.findByIdAndDelete(req.params.id);
+        const data = await Tracker.findOneAndDelete({ _id: req.params.id, user: req.user.id });
         if (!data) return res.status(404).json({ message: "Data tracker tidak ditemukan" });
         res.json({ message: "Data tracker berhasil dihapus" });
     } catch (error) {
