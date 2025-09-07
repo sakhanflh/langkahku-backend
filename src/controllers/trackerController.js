@@ -27,15 +27,6 @@ export const tambahData = async (req, res) => {
             1000
         );
 
-        // // Hitung bensin
-        // const bensin = (km / avgKmPerLiter) * 10000;
-
-        // // Hitung tabungan (10% dari pendapatan)
-        // const tabungan = pendapatan * 0.1;
-
-        // // Hitung pendapatan bersih
-        // const pendapatanBersih = pendapatan - (bensin + tabungan) - servis;
-
         const data = new Tracker({
             tanggal: req.body.tanggal || Date.now(),
             km,
@@ -46,6 +37,7 @@ export const tambahData = async (req, res) => {
             tabungan,
             servis,
             pendapatanBersih,
+            user: req.user.id,
         });
 
         await data.save();
@@ -79,8 +71,8 @@ export const updateData = async (req, res) => {
         const tabungan = Math.round(pendapatan * 0.1);
         const pendapatanBersih = Math.round(pendapatan - (bensin + tabungan) - servis);
 
-        const data = await Tracker.findByIdAndUpdate(
-            req.params.id,
+        const data = await Tracker.findOneAndUpdate(
+            { _id: req.params.id, user: req.user.id },
             {
                 tanggal: req.body.tanggal || Date.now(),
                 km,

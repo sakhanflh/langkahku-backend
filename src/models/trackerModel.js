@@ -10,6 +10,11 @@ const trackerSchema = new mongoose.Schema({
     tabungan: { type: Number, required: true },
     servis: { type: Number, default: 0 },
     pendapatanBersih: { type: Number, required: true },
+    user: { // 🔑 simpan user id dari JWT
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+        required: true,
+    },
 });
 
 const Tracker = mongoose.model("Tracker", trackerSchema);
