@@ -1,6 +1,6 @@
 import Todo from "../models/todoModel.js";
 
-export const tambahTodo = async (req, res) => {
+export const addTodo = async (req, res) => {
     try {
         const todo = new Todo(req.body);
         await todo.save();
@@ -10,10 +10,10 @@ export const tambahTodo = async (req, res) => {
     }
 };
 
-export const getTodos = async (req, res) => {
+export const getTodo = async (req, res) => {
     try {
-        const todos = await Todo.find();
-        res.json(todos);
+        const todo = await Todo.find();
+        res.json(todo);
     } catch (error) {
         res.status(500).json({ message: "Gagal mengambil to-do", error: error.message });
     }
@@ -29,7 +29,7 @@ export const updateTodo = async (req, res) => {
     }
 };
 
-export const hapusTodo = async (req, res) => {
+export const deleteTodo = async (req, res) => {
     try {
         const todo = await Todo.findByIdAndDelete(req.params.id);
         if (!todo) return res.status(404).json({ message: "To-do tidak ditemukan" });

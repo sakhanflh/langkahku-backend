@@ -3,6 +3,7 @@ import mongoose from "mongoose";
 const todoSchema = new mongoose.Schema({
     task: { type: String, required: true },
     prioritas: { type: String, enum: ["rendah", "sedang", "tinggi"], default: "sedang" },
+    deadline: { type: String, required: true },
     selesai: { type: Boolean, default: false },
     dibuat: { type: Date, default: Date.now },
 });
