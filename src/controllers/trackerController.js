@@ -19,7 +19,8 @@ export const tambahData = async (req, res) => {
             return Math.round(num / nearest) * nearest;
         }
 
-        const bensin = roundToNearest((kmNum / avgNum) * 10000, 1000);
+        const harga_bensin = 10000;
+        const bensin = roundToNearest((kmNum / avgNum) * harga_bensin, 1000);
         const tabungan = roundToNearest(pendapatanNum * 0.1, 1000);
 
         const pendapatanBersih = roundToNearest(

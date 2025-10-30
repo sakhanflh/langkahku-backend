@@ -4,9 +4,6 @@ import cors from "cors";
 import connectDB from "./config/db.js";
 
 import keuanganRoutes from "./routes/keuanganRoutes.js";
-import goalsRoutes from "./routes/goalsRoutes.js";
-import todoRoutes from "./routes/todoRoutes.js";
-import moodRoutes from "./routes/moodRoutes.js";
 import trackerRoutes from "./routes/trackerRoutes.js";
 import notificationRoutes from "./routes/notificationRoutes.js";
 import authRouter from "./routes/auth.js";
@@ -31,9 +28,6 @@ app.use("/api/auth", authRouter);
 app.use("/api/keuangan", keuanganRoutes);
 app.use("/api/loans", loanRoutes);
 app.use("/api/savings", savingRoutes);
-app.use("/api/goals", goalsRoutes);
-app.use("/api/todo", todoRoutes);
-app.use("/api/mood", moodRoutes);
 app.use("/api/tracker", trackerRoutes);
 app.use("/api/notification", notificationRoutes);
 
