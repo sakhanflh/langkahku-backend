@@ -1,18 +1,12 @@
 import express from "express";
-import {
-    tambahTransaksi,
-    getTransaksi,
-    getTransaksiById,
-    updateTransaksi,
-    hapusTransaksi
-} from "../controllers/keuanganController.js";
+import { editPengeluaranManual, getKeuangan, hapusPengeluaranManual, tambahPengeluaranManual } from "../controllers/keuanganController.js";
+import { protect } from "../middleware/auth.js";
 
 const router = express.Router();
 
-router.post("/", tambahTransaksi);
-router.get("/", getTransaksi);
-router.get("/:id", getTransaksiById);
-router.put("/:id", updateTransaksi);
-router.delete("/:id", hapusTransaksi);
+router.get("/", protect, getKeuangan); // fetch semua keuangan user
+router.post("/pengeluaran", protect, tambahPengeluaranManual); // tambah pengeluaran manual
+router.put("/pengeluaran/edit", protect, editPengeluaranManual);
+router.delete("/pengeluaran/delete", protect, hapusPengeluaranManual);
 
 export default router;

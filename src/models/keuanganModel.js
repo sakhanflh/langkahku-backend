@@ -1,14 +1,22 @@
 import mongoose from "mongoose";
 
-const keuanganSchema = new mongoose.Schema({
-    jenis: { type: String, enum: ["pemasukan", "pengeluaran", "tabungan", "pinjaman"], required: true },
+const pengeluaranManualSchema = new mongoose.Schema({
     kategori: { type: String, required: true },
-    jumlah: { type: Number, required: true },
+    nominal: { type: Number, required: true },
     catatan: { type: String },
-    tanggal: { type: Date, default: Date.now },
+})
 
-    relatedId: { type: mongoose.Schema.Types.ObjectId },
-}, { timestamps: true });
+
+const keuanganSchema = new mongoose.Schema({
+    user: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+    tanggal: { type: Date, default: Date.now },
+    pendapatan: { type: Number, required: true },
+    bensin: { type: Number, required: true },
+    tabungan: { type: Number, required: true },
+    servis: { type: Number, default: 0 },
+    pendapatanBersih: { type: Number, required: true },
+    pengeluaranManual: { type: [pengeluaranManualSchema], default: [] },
+});
 
 const Keuangan = mongoose.model("Keuangan", keuanganSchema);
 

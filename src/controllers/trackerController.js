@@ -1,3 +1,4 @@
+import Keuangan from "../models/keuanganModel.js";
 import Tracker from "../models/trackerModel.js";
 
 // CREATE
@@ -42,6 +43,19 @@ export const tambahData = async (req, res) => {
         });
 
         await data.save();
+
+        const keuanganData = new Keuangan({
+            user: req.user.id,
+            tanggal: data.tanggal,
+            pendapatan: pendapatanNum,
+            bensin,
+            tabungan,
+            servis: servisNum,
+            pendapatanBersih,
+        })
+        
+        await keuanganData.save()
+
         res.status(201).json({ message: "Data tracker berhasil ditambahkan", data });
     } catch (error) {
         res.status(500).json({ message: "Gagal menambah data tracker", error: error.message });

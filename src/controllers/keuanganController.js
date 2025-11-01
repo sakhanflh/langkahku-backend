@@ -1,87 +1,83 @@
 import Keuangan from "../models/keuanganModel.js";
-import Loan from "../models/loanModel.js";
-import Saving from "../models/savingModel.js";
 
-// Tambah transaksi
-export const tambahTransaksi = async (req, res) => {
-    const session = await Keuangan.startSession();
-    session.startTransaction();
+export const getKeuangan = async (req, res) => {
     try {
-        const { jenis, kategori, jumlah, relatedId } = req.body;
-
-        const transaksi = new Keuangan(req.body);
-        await transaksi.save({ session });
-
-        // jika transaksi terkait savings
-        if (jenis === "tabungan" && relatedId) {
-            const saving = await Saving.findByIdAndUpdate(
-                relatedId,
-                { $inc: { current: jumlah } },
-                { new: true, session }
-            );
-            if (!saving) throw new Error("Saving tidak ditemukan");
-        }
-
-        //jika transaksi terkait loans
-        if (jenis === "pinjaman" && relatedId) {
-            const loan = await Loan.findByIdAndUpdate(
-                relatedId,
-                { $inc: { paid: jumlah } },
-                { new: true, session }
-            );
-            if (!loan) throw new Error("Loan tidak ditemukan");
-        }
-
-        await session.commitTransaction();
-        session.endSession();
-
-        res.status(201).json({ message: "Transaksi berhasil ditambahkan", data: transaksi });
+        const data = await Keuangan.find({ user: req.user.id }).sort({ tanggal: -1 });
+        res.json(data);
     } catch (error) {
-        await session.abortTransaction();
-        session.endSession();
-        res.status(500).json({ message: "Gagal menambah transaksi", error: error.message });
+        res.status(500).json({ message: "Gagal mengambil data keuangan", error: error.message });
     }
 };
 
-// Ambil semua transaksi
-export const getTransaksi = async (req, res) => {
+export const tambahPengeluaranManual = async (req, res) => {
     try {
-        const transaksi = await Keuangan.find();
-        res.json(transaksi);
+        const { keuanganId, kategori, nominal, catatan } = req.body;
+
+        const keuangan = await Keuangan.findOne({ _id: keuanganId, user: req.user.id });
+        if (!keuangan) return res.status(404).json({ message: "Data keuangan tidak ditemukan" });
+
+        keuangan.pengeluaranManual.push({ kategori, nominal, catatan });
+
+        const totalPengeluaranManual = keuangan.pengeluaranManual.reduce((acc, item) => acc + item.nominal, 0);
+        keuangan.pendapatanBersih = keuangan.pendapatanBersih - nominal;
+
+        await keuangan.save();
+
+        res.json({ message: "Pengeluaran manual berhasil ditambahkan", keuangan });
     } catch (error) {
-        res.status(500).json({ message: "Gagal mengambil data transaksi", error: error.message });
+        res.status(500).json({ message: "Gagal menambahkan pengeluaran manual", error: error.message });
     }
 };
 
-// Ambil transaksi berdasarkan ID
-export const getTransaksiById = async (req, res) => {
+
+export const editPengeluaranManual = async (req, res) => {
     try {
-        const transaksi = await Keuangan.findById(req.params.id);
-        if (!transaksi) return res.status(404).json({ message: "Transaksi tidak ditemukan" });
-        res.json(transaksi);
+        const { keuanganId, pengeluaranId, kategori, nominal, catatan } = req.body;
+
+        const keuangan = await Keuangan.findOne({ _id: keuanganId, user: req.user.id });
+        if (!keuangan) return res.status(404).json({ message: "Data keuangan tidak ditemukan" });
+
+        const pengeluaran = keuangan.pengeluaranManual.id(pengeluaranId);
+        if (!pengeluaran) return res.status(404).json({ message: "Pengeluaran manual tidak ditemukan" });
+
+        // Hitung selisih nominal
+        const selisih = nominal - pengeluaran.nominal;
+
+        // Update field
+        pengeluaran.kategori = kategori || pengeluaran.kategori;
+        pengeluaran.nominal = nominal;
+        pengeluaran.catatan = catatan || pengeluaran.catatan;
+
+        // Update pendapatan bersih
+        keuangan.pendapatanBersih -= selisih; // jika nominal naik, bersih berkurang; jika turun, bersih naik
+
+        await keuangan.save();
+
+        res.json({ message: "Pengeluaran manual berhasil diperbarui", keuangan });
     } catch (error) {
-        res.status(500).json({ message: "Gagal mengambil transaksi", error: error.message });
+        res.status(500).json({ message: "Gagal mengedit pengeluaran manual", error: error.message });
     }
 };
 
-// Update transaksi
-export const updateTransaksi = async (req, res) => {
+// Hapus pengeluaran manual
+export const hapusPengeluaranManual = async (req, res) => {
     try {
-        const transaksi = await Keuangan.findByIdAndUpdate(req.params.id, req.body, { new: true });
-        if (!transaksi) return res.status(404).json({ message: "Transaksi tidak ditemukan" });
-        res.json({ message: "Transaksi berhasil diperbarui", data: transaksi });
-    } catch (error) {
-        res.status(500).json({ message: "Gagal memperbarui transaksi", error: error.message });
-    }
-};
+        const { keuanganId, pengeluaranId } = req.body;
 
-// Hapus transaksi
-export const hapusTransaksi = async (req, res) => {
-    try {
-        const transaksi = await Keuangan.findByIdAndDelete(req.params.id);
-        if (!transaksi) return res.status(404).json({ message: "Transaksi tidak ditemukan" });
-        res.json({ message: "Transaksi berhasil dihapus" });
+        const keuangan = await Keuangan.findOne({ _id: keuanganId, user: req.user.id });
+        if (!keuangan) return res.status(404).json({ message: "Data keuangan tidak ditemukan" });
+
+        const pengeluaran = keuangan.pengeluaranManual.id(pengeluaranId);
+        if (!pengeluaran) return res.status(404).json({ message: "Pengeluaran manual tidak ditemukan" });
+
+        // Tambahkan nominal kembali ke pendapatanBersih
+        keuangan.pendapatanBersih += pengeluaran.nominal;
+        keuangan.pengeluaranManual.pull(pengeluaranId);
+        
+        await keuangan.save();
+
+        res.json({ message: "Pengeluaran manual berhasil dihapus", keuangan });
     } catch (error) {
-        res.status(500).json({ message: "Gagal menghapus transaksi", error: error.message });
+        res.status(500).json({ message: "Gagal menghapus pengeluaran manual", error: error.message });
     }
 };

@@ -9,16 +9,18 @@ import notificationRoutes from "./routes/notificationRoutes.js";
 import authRouter from "./routes/auth.js";
 import loanRoutes from "./routes/loanRoutes.js";
 import savingRoutes from "./routes/savingRoutes.js";
+import cookieParser from "cookie-parser";
 dotenv.config();
 connectDB();
 
 const app = express();
 
 // Middleware
+app.use(cookieParser())
 app.use(cors({
-    origin: "*",
+    origin: ["http://localhost:5173", "https://langkahku-nine.vercel.app"],
+    credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE"],
-    credentials: true
 }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
