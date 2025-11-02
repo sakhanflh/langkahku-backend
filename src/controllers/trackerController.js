@@ -1,5 +1,11 @@
+import UserSetting from "../models/UserSetting.js";
 import Keuangan from "../models/keuanganModel.js";
 import Tracker from "../models/trackerModel.js";
+
+// Fungsi pembulatan
+function roundToNearest(num, nearest) {
+    return Math.round(num / nearest) * nearest;
+}
 
 // CREATE
 export const tambahData = async (req, res) => {
@@ -15,13 +21,14 @@ export const tambahData = async (req, res) => {
         const pendapatanNum = Number(pendapatan);
         const servisNum = Number(servis || 0);
 
-        function roundToNearest(num, nearest) {
-            return Math.round(num / nearest) * nearest;
-        }
+        // ✅ Ambil setting user dari DB
+        const userSetting = await UserSetting.findOne({ userId: req.user.id });
 
-        const harga_bensin = 10000;
+        const harga_bensin = userSetting?.fuelPrice || 10000;
+        const savingPercentage = userSetting?.savingPercentage || 10;
+
         const bensin = roundToNearest((kmNum / avgNum) * harga_bensin, 1000);
-        const tabungan = roundToNearest(pendapatanNum * 0.1, 1000);
+        const tabungan = roundToNearest((pendapatanNum * savingPercentage) / 100, 1000);
 
         const pendapatanBersih = roundToNearest(
             pendapatanNum - (bensin + tabungan) - servisNum,
@@ -44,10 +51,10 @@ export const tambahData = async (req, res) => {
 
         await data.save();
 
-        // Simpan juga keuangan yang terhubung dengan tracker ini
+        // Simpan juga keuangan yang terhubung
         const keuanganData = new Keuangan({
             user: req.user.id,
-            trackerId: data._id, // 🔗 Hubungkan ke tracker
+            trackerId: data._id,
             tanggal: data.tanggal,
             pendapatan: pendapatanNum,
             bensin,
@@ -58,9 +65,15 @@ export const tambahData = async (req, res) => {
 
         await keuanganData.save();
 
-        res.status(201).json({ message: "Data tracker & keuangan berhasil ditambahkan", data });
+        res.status(201).json({
+            message: "Data tracker & keuangan berhasil ditambahkan",
+            data,
+        });
     } catch (error) {
-        res.status(500).json({ message: "Gagal menambah data tracker", error: error.message });
+        res.status(500).json({
+            message: "Gagal menambah data tracker",
+            error: error.message,
+        });
     }
 };
 
@@ -70,7 +83,10 @@ export const getData = async (req, res) => {
         const data = await Tracker.find({ user: req.user.id }).sort({ tanggal: -1 });
         res.json(data);
     } catch (error) {
-        res.status(500).json({ message: "Gagal mengambil data tracker", error: error.message });
+        res.status(500).json({
+            message: "Gagal mengambil data tracker",
+            error: error.message,
+        });
     }
 };
 
@@ -83,9 +99,14 @@ export const updateData = async (req, res) => {
             return res.status(400).json({ message: "avgKmPerLiter wajib diisi" });
         }
 
-        const bensin = Math.round((km / avgKmPerLiter) * 10000);
-        const tabungan = Math.round(pendapatan * 0.1);
-        const pendapatanBersih = Math.round(pendapatan - (bensin + tabungan) - servis);
+        // ✅ Ambil setting user
+        const userSetting = await UserSetting.findOne({ userId: req.user.id });
+        const harga_bensin = userSetting?.fuelPrice || 10000;
+        const savingPercentage = userSetting?.savingPercentage || 10;
+
+        const bensin = roundToNearest((km / avgKmPerLiter) * harga_bensin, 1000);
+        const tabungan = roundToNearest((pendapatan * savingPercentage) / 100, 1000);
+        const pendapatanBersih = roundToNearest(pendapatan - (bensin + tabungan) - servis, 1000);
 
         const data = await Tracker.findOneAndUpdate(
             { _id: req.params.id, user: req.user.id },
@@ -118,23 +139,36 @@ export const updateData = async (req, res) => {
             }
         );
 
-        res.json({ message: "Data tracker & keuangan berhasil diperbarui", data });
+        res.json({
+            message: "Data tracker & keuangan berhasil diperbarui",
+            data,
+        });
     } catch (error) {
-        res.status(500).json({ message: "Gagal memperbarui data tracker", error: error.message });
+        res.status(500).json({
+            message: "Gagal memperbarui data tracker",
+            error: error.message,
+        });
     }
 };
 
 // DELETE
 export const hapusData = async (req, res) => {
     try {
-        const data = await Tracker.findOneAndDelete({ _id: req.params.id, user: req.user.id });
-        if (!data) return res.status(404).json({ message: "Data tracker tidak ditemukan" });
+        const data = await Tracker.findOneAndDelete({
+            _id: req.params.id,
+            user: req.user.id,
+        });
+        if (!data)
+            return res.status(404).json({ message: "Data tracker tidak ditemukan" });
 
-        // 🔥 Hapus juga data keuangan yang terkait dengan tracker ini
+        // 🔥 Hapus juga data keuangan terkait
         await Keuangan.findOneAndDelete({ trackerId: data._id, user: req.user.id });
 
         res.json({ message: "Data tracker & keuangan terkait berhasil dihapus" });
     } catch (error) {
-        res.status(500).json({ message: "Gagal menghapus data tracker", error: error.message });
+        res.status(500).json({
+            message: "Gagal menghapus data tracker",
+            error: error.message,
+        });
     }
 };

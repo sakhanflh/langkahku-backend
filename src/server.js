@@ -9,6 +9,7 @@ import notificationRoutes from "./routes/notificationRoutes.js";
 import authRouter from "./routes/auth.js";
 import loanRoutes from "./routes/loanRoutes.js";
 import savingRoutes from "./routes/savingRoutes.js";
+import userSettingRoutes from "./routes/userSettingRoutes.js";
 import cookieParser from "cookie-parser";
 dotenv.config();
 connectDB();
@@ -32,7 +33,7 @@ app.use("/api/loans", loanRoutes);
 app.use("/api/savings", savingRoutes);
 app.use("/api/tracker", trackerRoutes);
 app.use("/api/notification", notificationRoutes);
-
+app.use("/api/settings", userSettingRoutes)
 app.get("/", (req, res) => {
     res.send("🚀 API Langkahku Running...");
 });

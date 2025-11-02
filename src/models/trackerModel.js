@@ -8,9 +8,9 @@ const trackerSchema = new mongoose.Schema({
     avgKmPerLiter: { type: Number, required: true },
     bensin: { type: Number, required: true },
     tabungan: { type: Number, required: true },
-    servis: { type: Number, default: 0 },
+    servis: { type: Number, default: 0 }, 
     pendapatanBersih: { type: Number, required: true },
-    user: { // 🔑 simpan user id dari JWT
+    user: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "User",
         required: true,
