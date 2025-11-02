@@ -9,6 +9,7 @@ const pengeluaranManualSchema = new mongoose.Schema({
 
 const keuanganSchema = new mongoose.Schema({
     user: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+    trackerId: { type: mongoose.Schema.Types.ObjectId, ref: "Tracker" },
     tanggal: { type: Date, default: Date.now },
     pendapatan: { type: Number, required: true },
     bensin: { type: Number, required: true },
