@@ -19,7 +19,7 @@ const app = express();
 // Middleware
 app.use(cookieParser())
 app.use(cors({
-    origin: ["http://localhost:5173", "https://langkahku-nine.vercel.app"],
+    origin: ["http://localhost:5173", "https://langkahku-nine.vercel.app", "https://langkahku.sakhanaufal.id"],
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE"],
 }));
