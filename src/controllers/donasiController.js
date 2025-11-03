@@ -1,4 +1,4 @@
-import Donasi from "../models/donasiModel.js";
+import donasiModel from "../models/donasiModel.js";
 
 // 🟢 menerima webhook dari Saweria
 export const handleSaweriaWebhook = async (req, res) => {
@@ -11,15 +11,14 @@ export const handleSaweriaWebhook = async (req, res) => {
         }
 
         const donasiData = {
-            nama: data.donation.name || "Anonim",
-            jumlah: Number(data.donation.amount) || 0,
-            pesan: data.donation.message || "",
-            platform: "Saweria",
+            name: data.donation.name || "Anonim",
+            amount: Number(data.donation.amount) || 0,
+            message: data.donation.message || "",
         };
 
         console.log("📦 Data donasi yang akan disimpan:", donasiData);
 
-        const donasi = new Donasi(donasiData);
+        const donasi = new donasiModel(donasiData);
         await donasi.save();
 
         console.log("✅ Donasi tersimpan ke database");
@@ -30,14 +29,28 @@ export const handleSaweriaWebhook = async (req, res) => {
     }
 };
 
-
 // 🏆 ambil leaderboard donatur (10 tertinggi)
 export const getTopDonatur = async (req, res) => {
     try {
-        const topDonatur = await Donasi.find().sort({ amount: -1 }).limit(10);
+        const topDonatur = await donasiModel
+            .aggregate([
+                { $group: { _id: "$name", total: { $sum: "$amount" } } },
+                { $sort: { total: -1 } },
+                { $limit: 10 },
+            ]);
         res.json(topDonatur);
     } catch (error) {
         console.error("Error ambil leaderboard:", error);
         res.status(500).json({ success: false });
+    }
+};
+
+// 🧾 ambil semua donasi
+export const getAllDonasi = async (req, res) => {
+    try {
+        const data = await donasiModel.find().sort({ created_at: -1 });
+        res.json(data);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
     }
 };
