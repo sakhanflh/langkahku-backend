@@ -7,6 +7,6 @@ const router = express.Router();
 router.post("/webhook/saweria", handleSaweriaWebhook);
 
 // Frontend akan mengambil leaderboard dari sini
-router.get("/donasi/top", getTopDonatur);
+router.get("/top", getTopDonatur);
 
 export default router;
